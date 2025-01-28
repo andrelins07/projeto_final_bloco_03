@@ -1,41 +1,26 @@
-import { ChangeEvent, useContext, useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { RotatingLines } from "react-loader-spinner";
 import { useNavigate, useParams } from "react-router-dom";
-import { AuthContext } from "../../../contexts/AuthContext";
-import Tema from "../../../models/Tema";
 import { atualizar, buscar, cadastrar } from "../../../services/Service";
 import { ToastAlerta } from "../../../utils/ToastAlerta";
+import Categoria from "../../../models/Categoria";
 
-function FormTema() {
+function FormCategoria() {
 
     const navigate = useNavigate();
 
-    const [tema, setTema] = useState<Tema>({} as Tema)
+    const [categoria, setCategoria] = useState<Categoria>({} as Categoria)
     const [isLoading, setIsLoading] = useState<boolean>(false)
-
-    const { usuario, handleLogout } = useContext(AuthContext)
-    const token = usuario.token
 
     const { id } = useParams<{ id: string }>();
 
     async function buscarPorId(id: string) {
         try {
-            await buscar(`/temas/${id}`, setTema, {
-                headers: { Authorization: token }
-            })
+            await buscar(`/categorias/${id}`, setCategoria)
         } catch (error: any) {
-            if (error.toString().includes('403')) {
-                handleLogout()
-            }
+            ToastAlerta('Ocorreu um erro inesperado', 'erro');
         }
     }
-
-    useEffect(() => {
-        if (token === '') {
-            ToastAlerta('Você precisa estar logado','info')
-            navigate('/')
-        }
-    }, [token])
 
     useEffect(() => {
         if (id !== undefined) {
@@ -44,47 +29,33 @@ function FormTema() {
     }, [id])
 
     function atualizarEstado(e: ChangeEvent<HTMLInputElement>) {
-        setTema({
-            ...tema,
+        setCategoria({
+            ...categoria,
             [e.target.name]: e.target.value
         })
     }
 
     function retornar() {
-        navigate("/temas")
+        navigate("/categorias")
     }
 
-    async function gerarNovoTema(e: ChangeEvent<HTMLFormElement>) {
+    async function gerarNovaCategoria(e: ChangeEvent<HTMLFormElement>) {
         e.preventDefault()
         setIsLoading(true)
 
         if (id !== undefined) {
             try {
-                await atualizar(`/temas`, tema, setTema, {
-                    headers: { 'Authorization': token }
-                })
-                ToastAlerta('O Tema foi atualizado com sucesso!', 'sucesso')
+                await atualizar(`/categorias`, categoria, setCategoria)
+                ToastAlerta('A Categoria foi atualizada com sucesso!', 'sucesso')
             } catch (error: any) {
-                if (error.toString().includes('403')) {
-                    handleLogout();
-                } else {
-                    ToastAlerta('Erro ao atualizar o tema.', 'erro')
-                }
-
+                ToastAlerta('Erro ao atualizar o tema.', 'erro')
             }
         } else {
             try {
-                await cadastrar(`/temas`, tema, setTema, {
-                    headers: { 'Authorization': token }
-                })
-                ToastAlerta('O Tema foi cadastrado com sucesso!','sucesso')
+                await cadastrar(`/categorias`, categoria, setCategoria)
+                ToastAlerta('A categoria foi cadastrada com sucesso!','sucesso')
             } catch (error: any) {
-                if (error.toString().includes('403')) {
-                    handleLogout();
-                } else {
-                    ToastAlerta('Erro ao cadastrar o tema.', 'erro')
-                }
-
+                ToastAlerta('Erro ao cadastrar a categoria.', 'erro')
             }
         }
 
@@ -95,18 +66,18 @@ function FormTema() {
     return (
         <div className="container flex flex-col items-center justify-center mx-auto">
             <h1 className="text-4xl text-center my-8">
-                {id === undefined ? 'Cadastrar Tema' : 'Editar Tema'}
+                {id === undefined ? 'Cadastrar Categoria' : 'Editar Categoria'}
             </h1>
 
-            <form className="w-1/2 flex flex-col gap-4" onSubmit={gerarNovoTema}>
+            <form className="w-1/2 flex flex-col gap-4" onSubmit={gerarNovaCategoria}>
                 <div className="flex flex-col gap-2">
-                    <label htmlFor="descricao">Descrição do Tema</label>
+                    <label htmlFor="descricao">Nome da Categoria</label>
                     <input
                         type="text"
-                        placeholder="Descreva aqui seu tema"
-                        name='descricao'
+                        placeholder="Descreva aqui sua categoria"
+                        name='nome'
                         className="border-2 border-slate-700 rounded p-2"
-                        value={tema.descricao}
+                        value={categoria.nome}
                         onChange={(e: ChangeEvent<HTMLInputElement>) => atualizarEstado(e)}
                     />
                 </div>
@@ -131,4 +102,4 @@ function FormTema() {
     );
 }
 
-export default FormTema;
+export default FormCategoria;
